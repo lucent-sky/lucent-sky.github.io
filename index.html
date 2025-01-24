@@ -44,6 +44,9 @@
                 spellResult.innerText = `casting ${spellName}...`;
                 spellImage.style.display = "block";
                 document.addEventListener("mousemove", moveSpell);
+                setTimeout(() => {
+                    document.addEventListener("click", placeStaticImage);
+                }, 250);
                 document.addEventListener("click", placeStaticImage);
                  
             } else if (spellName.trim() === "") {
