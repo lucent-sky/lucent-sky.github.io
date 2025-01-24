@@ -1,62 +1,35 @@
 <!DOCTYPE html>
 <html>
+<meta>
+     <link rel="stylesheet" type="text/css" href="index.css">
+</meta>
 <head>
     <title>csci379 spellcasting practice</title>
-    <style>
-        /* fireball styling */
-        #spellImage {
-            position: absolute;
-            width: 50px; /* sizing */
-            height: 50px;
-            pointer-events: none; 
-            display: none; /* hide on startup */
-        }
-    </style>
 </head>
 <body>
-    <h1>hiiiiii welcome in :3</h1>
+    <h1>welcome in :3</h1>
     <p>this is my training grounds for csci379 (computer generated graphics)</p>
     
     <!-- get spellname -->
     <label for="spellName">what spell will you cast?</label>
     <br>
     <input type="text" id="spellName" placeholder="enter spell name here">
-     
-        <!-- cast the spell -->
+    
+    <!-- cast the spell -->
     <button onclick="castSpell()">click to cast</button>
     <p id="spellResult"></p>
     
-    <!-- fireball easter egg :3 -->
-    <img id="spellImage" src="fireball.png" alt="Fireball">
-    
     <script>
-        // spellcasting
         function castSpell() {
-            const spellName = document.getElementById("spellName").value.trim().toLowerCase();
-            const spellResult = document.getElementById("spellResult");
-            const spellImage = document.getElementById("spellImage");
+            // grab spell name
+            const spellName = document.getElementById("spellName").value;
             
-            if (spellName === "fireball") {
-                // display fireball
-                spellResult.innerText = `casting "${spellName}...`;
-                spellImage.style.display = "block";
-                document.addEventListener("mousemove", moveFireball);
-                 
-            } else if (spellName.trim() === "") {
+            if (spellName.trim() === "") {
                 document.getElementById("spellResult").innerText = "you can't cast spells without words!!";
-                spellImage.style.display = "none";
-                document.removeEventListener("mousemove", moveFireball);
             } else {
                 document.getElementById("spellResult").innerText = 
                     `cast ${spellName}!`;
             }
-        }
-
-        // move fireball w/mouse
-        function moveSpell(event) {
-            const spellImage = document.getElementById("spellImage");
-            spellImage.style.left = event.pageX + "px";
-            spellImage.style.top = event.pageY + "px";
         }
     </script>
 </body>
