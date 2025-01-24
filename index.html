@@ -21,7 +21,7 @@
     <p>this is my training grounds for csci379 (computer generated graphics)</p>
     
     <!-- get spellname -->
-    <label for="spellName">what spell will you cast?</label>
+    <label for="spellName">what spell will you cast? new update</label>
     <br>
     <input type="text" id="spellName" placeholder="enter spell name here">
      
@@ -63,8 +63,8 @@
         // move fireball w/mouse
         function moveSpell(event) {
             const spellImage = document.getElementById("spellImage");
-            spellImage.style.left = event.pageX + "px";
-            spellImage.style.top = event.pageY + "px";
+            spellImage.style.left = (event.pageX-15) + "px";
+            spellImage.style.top = (event.pageY+15) + "px";
         }
 
         function placeStaticImage(event) {
