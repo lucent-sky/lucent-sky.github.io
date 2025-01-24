@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+<meta>
+     <link rel="stylesheet" type="text/css" href="index.css">
+</meta>
 <head>
     <title>CSCI379 Spellcasting Practice</title>
 </head>
@@ -13,7 +16,7 @@
     <input type="text" id="spellName" placeholder="enter spell name here">
     
     <!-- cast the spell -->
-    <button onclick="castSpell()">Click to Cast a Spell!</button>
+    <button onclick="castSpell()">click to cast</button>
     <p id="spellResult"></p>
     
     <script>
@@ -25,7 +28,7 @@
                 document.getElementById("spellResult").innerText = "you can't cast spells without words!!";
             } else {
                 document.getElementById("spellResult").innerText = 
-                    `cast "${spellName}"!`;
+                    `cast ${spellName}!`;
             }
         }
     </script>
