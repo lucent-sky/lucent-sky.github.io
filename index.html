@@ -1,17 +1,32 @@
- <!DOCTYPE html>
- <html>
- <head>
-     <title><CSCI379 Spellcasting Practice></title>
- </head>
- <body>
-     <h1>Welcome in :3</h1>
-     <p>this is a testing ground for csci379 (computer generated graphics)</p>
-     <button onclick="castSpell()">Click to Cast a Spell!</button>
-     <p id="spellResult"></p>
-     <script>
-     function castSpell() {
-         document.getElementById("spellResult").innerText = "Your spell has been cast successfully!";
-     }
-     </script>
- </body>
- </html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSCI379 Spellcasting Practice</title>
+</head>
+<body>
+    <h1>welcome in :3</h1>
+    <p>this is my training grounds for csci379 (computer generated graphics)</p>
+    
+    <!-- get spellname -->
+    <label for="spellName">Enter your spell:</label>
+    <input type="text" id="spellName" placeholder="Type your spell name here">
+    
+    <!-- cast the spell -->
+    <button onclick="castSpell()">Click to Cast a Spell!</button>
+    <p id="spellResult"></p>
+    
+    <script>
+        function castSpell() {
+            // grab spell name
+            const spellName = document.getElementById("spellName").value;
+            
+            if (spellName.trim() === "") {
+                document.getElementById("spellResult").innerText = "you can't cast spells without words!!";
+            } else {
+                document.getElementById("spellResult").innerText = 
+                    `cast "${spellName}"!`;
+            }
+        }
+    </script>
+</body>
+</html>
