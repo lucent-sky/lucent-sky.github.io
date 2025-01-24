@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+<meta>
+    <link rel="stylesheet" type="text/css" href="index.css">
+</meta>
 <head>
     <title>csci379 spellcasting practice</title>
     <style>
@@ -14,7 +17,7 @@
     </style>
 </head>
 <body>
-    <h1>test does this work also welcome in :3</h1>
+    <h1>welcome in :3</h1>
     <p>this is my training grounds for csci379 (computer generated graphics)</p>
     
     <!-- get spellname -->
@@ -38,7 +41,7 @@
             
             if (spellName === "fireball") {
                 // display fireball
-                spellResult.innerText = `casting "${spellName}...`;
+                spellResult.innerText = `casting ${spellName}...`;
                 spellImage.style.display = "block";
                 document.addEventListener("mousemove", moveFireball);
                  
@@ -49,6 +52,8 @@
             } else {
                 document.getElementById("spellResult").innerText = 
                     `cast ${spellName}!`;
+                spellImage.style.display = "none";
+                document.removeEventListener("mousemove", moveFireball);
             }
         }
 
