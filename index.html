@@ -44,6 +44,7 @@
                 spellResult.innerText = `casting ${spellName}...`;
                 spellImage.style.display = "block";
                 document.addEventListener("mousemove", moveSpell);
+                document.addEventListener("click", placeStaticImage);
                  
             } else if (spellName.trim() === "") {
                 document.getElementById("spellResult").innerText = "you can't cast spells without words!!";
@@ -62,6 +63,26 @@
             const spellImage = document.getElementById("spellImage");
             spellImage.style.left = event.pageX + "px";
             spellImage.style.top = event.pageY + "px";
+        }
+
+        function placeStaticImage(event) {
+            const spellImage = document.getElementById("spellImage");
+            const staticImage = document.createElement("img");
+            // place a static image if user clicks
+            staticImage.src = "image.png";
+            staticImage.style.position = "absolute";
+            staticImage.style.left = event.pageX + "px";
+            staticImage.style.top = event.pageY + "px";
+            staticImage.style.width = "75px";
+            staticImage.style.height = "75px";
+            
+            document.body.appendChild(staticImage);
+
+            // get rid of fireball, place static image
+            spellImage.style.display = "none";
+            document.removeEventListener("mousemove", moveSpell);
+            document.removeEventListener("click", placeStaticImage);
+            document.getElementById("spellResult").innerText = "finished casting fireball";
         }
     </script>
 </body>
