@@ -205,4 +205,3 @@ init().catch(error => {
     document.body.appendChild(pTag);
     document.getElementById("renderCanvas")?.remove();
 });
-
