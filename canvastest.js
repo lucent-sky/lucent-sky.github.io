@@ -26,10 +26,17 @@ async function init() {
 
     // Create a triangle geometry in CPU
     var vertices = new Float32Array([
-        // x, y
-            0, 0.5,
-            -0.5, 0,
-            0.5,  0,
+        // waow it's a 4 pointed star this time
+        0, 0.5,   // Top
+        -0.2, 0.2, // Top-left inner
+        -0.5, 0.2, // Left outer
+        -0.2, 0,   // Bottom-left inner
+        -0.3, -0.5, // Bottom-left outer
+        0, -0.2,  // Bottom inner
+        0.3, -0.5, // Bottom-right outer
+        0.2, 0,    // Bottom-right inner
+        0.5, 0.2,  // Right outer
+        0.2, 0.2   // Top-right inner
         ]);
 
         // Create vertex buffer to store the vertices in GPU
