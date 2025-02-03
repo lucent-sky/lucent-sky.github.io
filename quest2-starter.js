@@ -34,50 +34,114 @@ import DemoTreeObject from '/lib/DSViz/DemoTreeObject.js'
 import PGA2D from '/lib/Math/PGA2D.js'
 
 async function init() {
-  // Create a canvas tag
-  const canvasTag = document.createElement('canvas');
-  canvasTag.id = "renderCanvas";
-  document.body.appendChild(canvasTag);
-  // Create a 2d animated renderer
-  const renderer = new FilteredRenderer(canvasTag);
-  await renderer.init();
-  // Create a background
-  await renderer.appendSceneObject(new Standard2DFullScreenObject(renderer._device, renderer._canvasFormat, "/assets/bucknell.jpg"));
-  // Create a triangle geometry
-  var vertices1 = new Float32Array([
-     // x, y, r, g, b, a
-     0, 0.5, 1, 0, 0, 1,
-     -0.5, 0, 0, 1, 0, 1,
-     0.5,  0, 0, 0, 1, 1,
-  ]);
-  var pose = [1, 0, 0, 0, 1, 1];
-  pose = new Float32Array(pose); // need to covert to Float32Array for uploading to GPU with fixed known size
-  await renderer.appendSceneObject(new Standard2DPGAPosedVertexColorObject(renderer._device, renderer._canvasFormat, vertices1, pose));
-  // Create another triangle geometry
-  var vertices2 = new Float32Array([
-     // x, y
-     0, -0.6,
-     -0.5, -0.1,
-     0.5,  -0.1,
-     0, -0.6, // loop back to the first vertex
-  ]);
-  await renderer.appendSceneObject(new LineStrip2DVertexObject(renderer._device, renderer._canvasFormat, vertices2));
-  await renderer.appendSceneObject(new DemoTreeObject(renderer._device, renderer._canvasFormat, new Float32Array([1, 0, 0, 0, 0.5, 0.5])));
-  // run at every 100 ms
-  let angle = Math.PI / 100;
-  // rotate about p
-  let center = [0, 0];
-  let dr = PGA2D.normaliozeMotor([Math.cos(angle / 2), -Math.sin(angle / 2), -center[0] * Math.sin(angle / 2), -center[1] * Math.sin(angle / 2)]);
-  setInterval(() => { 
-    renderer.render();
-    // update the triangle pose
-    let newmotor = PGA2D.normaliozeMotor(PGA2D.geometricProduct(dr, [pose[0], pose[1], pose[2], pose[3]]));
-    pose[0] = newmotor[0];
-    pose[1] = newmotor[1];
-    pose[2] = newmotor[2];
-    pose[3] = newmotor[3];
-  }, 100); // call every 100 ms
-  return renderer;
+    const canvasTag = document.createElement('canvas');
+    canvasTag.id = "renderCanvas";
+    document.body.appendChild(canvasTag);
+    
+    const renderer = new FilteredRenderer(canvasTag);
+    await renderer.init();
+    
+    // Space background
+    await renderer.appendSceneObject(new Standard2DFullScreenObject(renderer._device, renderer._canvasFormat, "/assets/space.jpg"));
+
+    // Sun - Large yellow circle
+    const sun = createCircle(0, 0, 0.2, [1, 1, 0, 1]);
+    await renderer.appendSceneObject(sun);
+
+    // Planets data: [distance, size, color]
+    const planets = [
+        [0.3, 0.05, [0.5, 0.5, 1, 1]],  // Mercury
+        [0.5, 0.07, [1, 0.5, 0, 1]],    // Venus
+        [0.7, 0.08, [0, 0, 1, 1]],      // Earth
+        [0.9, 0.06, [1, 0, 0, 1]],      // Mars
+        [1.2, 0.1, [1, 1, 0, 1]],       // Jupiter
+        [1.5, 0.09, [0.6, 0.6, 1, 1]],  // Saturn
+        [1.8, 0.07, [0, 1, 1, 1]],      // Uranus
+        [2.1, 0.06, [0, 0, 0.5, 1]]     // Neptune
+    ];
+    
+    let planetObjects = [];
+    for (let i = 0; i < planets.length; i++) {
+        let [dist, size, color] = planets[i];
+        let planet = createCircle(dist, 0, size, color);
+        await renderer.appendSceneObject(planet);
+        planetObjects.push({ obj: planet, dist, angle: 0, speed: 0.02 - i * 0.002 });
+    }
+
+    // Moon orbiting Earth
+    let moon = createCircle(0.75, 0, 0.02, [0.7, 0.7, 0.7, 1]);
+    await renderer.appendSceneObject(moon);
+    
+    // Elliptical orbit for a planet
+    let ellipseOrbit = createEllipse(1.3, 0.7);
+    await renderer.appendSceneObject(ellipseOrbit);
+    
+    // Spaceship (Triangle + two rectangles)
+    let spaceship = createSpaceship();
+    await renderer.appendSceneObject(spaceship);
+    
+    // Animation loop
+    setInterval(() => {
+        renderer.render();
+
+        // Rotate planets
+        planetObjects.forEach(p => {
+            p.angle += p.speed;
+            let x = p.dist * Math.cos(p.angle);
+            let y = p.dist * Math.sin(p.angle);
+            p.obj.pose.set([1, 0, 0, 0, x, y]);
+        });
+
+        // Moon orbiting Earth
+        let earth = planetObjects[2];
+        let moonAngle = earth.angle * 3;
+        let mx = earth.dist * Math.cos(earth.angle) + 0.1 * Math.cos(moonAngle);
+        let my = earth.dist * Math.sin(earth.angle) + 0.1 * Math.sin(moonAngle);
+        moon.pose.set([1, 0, 0, 0, mx, my]);
+        
+        // Spaceship moves along the elliptical orbit
+        let t = performance.now() / 2000;
+        let sx = 1.3 * Math.cos(t);
+        let sy = 0.7 * Math.sin(t);
+        spaceship.pose.set([1, 0, 0, 0, sx, sy]);
+    }, 50);
+
+    return renderer;
+}
+
+function createCircle(x, y, size, color) {
+    let vertices = new Float32Array([
+        x, y, color[0], color[1], color[2], color[3]
+    ]);
+    return new Standard2DPGAPosedVertexColorObject(null, null, vertices, new Float32Array([1, 0, 0, 0, x, y]));
+}
+
+function createEllipse(a, b) {
+    let vertices = [];
+    for (let t = 0; t <= Math.PI * 2; t += 0.1) {
+        vertices.push(a * Math.cos(t), b * Math.sin(t));
+    }
+    return new LineStrip2DVertexObject(null, null, new Float32Array(vertices));
+}
+
+function createSpaceship() {
+    let vertices = new Float32Array([
+        // Triangle (body)
+        0, 0.05, 1, 1, 1, 1,
+        -0.02, -0.05, 1, 1, 1, 1,
+        0.02, -0.05, 1, 1, 1, 1,
+        
+        // Left wing (rectangle)
+        -0.03, -0.03, 0.7, 0.7, 0.7, 1,
+        -0.05, -0.05, 0.7, 0.7, 0.7, 1,
+        -0.03, -0.07, 0.7, 0.7, 0.7, 1,
+
+        // Right wing (rectangle)
+        0.03, -0.03, 0.7, 0.7, 0.7, 1,
+        0.05, -0.05, 0.7, 0.7, 0.7, 1,
+        0.03, -0.07, 0.7, 0.7, 0.7, 1
+    ]);
+    return new Standard2DPGAPosedVertexColorObject(null, null, vertices, new Float32Array([1, 0, 0, 0, 0, 0]));
 }
 
 init().then( ret => {
