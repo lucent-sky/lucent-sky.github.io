@@ -244,7 +244,7 @@ async function init() {
   const planetBehind2OrbitRadiusX = 0.5; // Semi-major axis for new planet behind planetBehind
   const planetBehind2OrbitRadiusY = 0.35; // Semi-minor axis for new elliptical orbit
   const planetBehind3OrbitRadius = 0.6; // Orbit radius for the new planet behind planetBehind2 (circular orbit)
-  const planetBehind4OrbitRadius = 0.7; // Orbit radius for the new planet behind planetBehind3 (circular orbit)
+  const planetBehind4OrbitRadius = 0.55; // Orbit radius for the new planet behind planetBehind3 (circular orbit)
   const moonOrbitRadius = 0.05;
   const planetSpeed = Math.PI / 100;
   const moonSpeed = Math.PI / 50;
