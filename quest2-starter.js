@@ -121,20 +121,37 @@ async function init() {
   );
   await renderer.appendSceneObject(planet3);
 
-  // --- New Planets (farther from Sun) ---
-  const newPlanets = [];
-  const planetRadii = [0.4, 0.5, 0.6, 0.7, 0.8]; // Orbital radii for the 5 new planets
+  // --- New Planet Behind (Elliptical Orbit) ---
+  const planetBehindVertices = generateCircleVertices(0.03, 40, 0.3, 0.6, 1, 1);
+  let planetBehindPose = new Float32Array([1, 0, 0.4, 0, 1, 1]); // New orbit radius 0.4 (behind planet with moon)
+  const planetBehind = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat, planetBehindVertices, planetBehindPose
+  );
+  await renderer.appendSceneObject(planetBehind);
 
-  for (let i = 0; i < 5; i++) {
-    const radius = planetRadii[i];
-    const planetVertices = generateCircleVertices(0.03, 40, Math.random(), Math.random(), Math.random(), 1);
-    let planetPose = new Float32Array([1, 0, radius, 0, 1, 1]);
-    const planet = new Standard2DPGAPosedVertexColorObject(
-      renderer._device, renderer._canvasFormat, planetVertices, planetPose
-    );
-    newPlanets.push(planet);
-    await renderer.appendSceneObject(planet);
-  }
+  // --- New Planet Behind 2 (even further behind) ---
+  const planetBehind2Vertices = generateCircleVertices(0.03, 40, 0.3, 0.6, 1, 1);
+  let planetBehind2Pose = new Float32Array([1, 0, 0.5, 0, 1, 1]); // Even further behind with radius 0.5
+  const planetBehind2 = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat, planetBehind2Vertices, planetBehind2Pose
+  );
+  await renderer.appendSceneObject(planetBehind2);
+
+  // --- New Planet Behind 3 (even further behind, circular orbit) ---
+  const planetBehind3Vertices = generateCircleVertices(0.03, 40, 0.3, 0.6, 1, 1);
+  let planetBehind3Pose = new Float32Array([1, 0, 0.6, 0, 1, 1]); // Even further behind with radius 0.6
+  const planetBehind3 = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat, planetBehind3Vertices, planetBehind3Pose
+  );
+  await renderer.appendSceneObject(planetBehind3);
+
+  // --- New Planet Behind 4 (even further behind, circular orbit) ---
+  const planetBehind4Vertices = generateCircleVertices(0.03, 40, 0.3, 0.6, 1, 1);
+  let planetBehind4Pose = new Float32Array([1, 0, 0.7, 0, 1, 1]); // Even further behind with radius 0.7
+  const planetBehind4 = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat, planetBehind4Vertices, planetBehind4Pose
+  );
+  await renderer.appendSceneObject(planetBehind4);
 
   // === SPACESHIP 1 ===
   const spaceship1Pose = new Float32Array([1, 0, 0.5, 0, 1, 1]);
@@ -172,26 +189,145 @@ async function init() {
   let spaceshipDir = 1;
   const spaceshipSpeed = 0.01;
 
+  // === SPACESHIP 2 ===
+  const ship2Pose = new Float32Array([1, 0, -0.3, 0.3, 1, 1]);
+
+  const ship2Nose = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat,
+    generateTriangleVertices(0.025, 1, 0.9, 0.2, 0.2, 1),
+    ship2Pose
+  );
+  const ship2Body = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat,
+    generateRectangleVertices(0.03, 0.07, 0.9, 0.4, 0.4, 1),
+    ship2Pose
+  );
+  const ship2Left = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat,
+    generateCircleVertices(0.01, 20, 1, 0.6, 0.6, 1),
+    ship2Pose
+  );
+  const ship2Right = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat,
+    generateCircleVertices(0.01, 20, 1, 0.6, 0.6, 1),
+    ship2Pose
+  );
+
+  await renderer.appendSceneObject(ship2Nose);
+  await renderer.appendSceneObject(ship2Body);
+  await renderer.appendSceneObject(ship2Left);
+  await renderer.appendSceneObject(ship2Right);
+
+  const keyframes = [
+    PGA2D.normaliozeMotor([1, 0, -0.4, 0.4]),
+    PGA2D.normaliozeMotor([1, 0, 0.0, -0.4]),
+    PGA2D.normaliozeMotor([1, 0, 0.4, 0.4]),
+  ];
+  let interpTime = 0;
+  let currentKeyframe = 0;
+  const interpSpeed = 0.01;
+
   // --- Animation Loop ---
   let planet1Angle = 0;
   let planet2Angle = 0;
   let planet3Angle = 0;
+  let planetBehindAngle = 0; // Angle for the new elliptical orbit
+  let planetBehind2Angle = 0; // Angle for the new planet behind planetBehind
+  let planetBehind3Angle = 0; // Angle for the new planet behind planetBehind2
+  let planetBehind4Angle = 0; // Angle for the new planet behind planetBehind3
   let moonAngle = 0;
-  let newPlanetsAngles = Array(5).fill(0); // For 5 new planets
   const planet1OrbitRadius = 0.3;
   const planet2OrbitRadius = 0.2; // New planet 2 closer to the Sun
   const planet3OrbitRadius = 0.1; // New planet 3 closer to the Sun
+  const planetBehindOrbitRadiusX = 0.4; // Semi-major axis for elliptical orbit
+  const planetBehindOrbitRadiusY = 0.25; // Semi-minor axis for elliptical orbit
+  const planetBehind2OrbitRadiusX = 0.5; // Semi-major axis for new planet behind planetBehind
+  const planetBehind2OrbitRadiusY = 0.35; // Semi-minor axis for new elliptical orbit
+  const planetBehind3OrbitRadius = 0.6; // Orbit radius for the new planet behind planetBehind2 (circular orbit)
+  const planetBehind4OrbitRadius = 0.7; // Orbit radius for the new planet behind planetBehind3 (circular orbit)
   const moonOrbitRadius = 0.05;
   const planetSpeed = Math.PI / 100;
   const moonSpeed = Math.PI / 50;
 
-  setInterval(() => {
+  async function applyPointillism(imageData) {
+    const width = imageData.width;
+    const height = imageData.height;
+    const pixels = imageData.data;
+
+    // Total number of pixels in the image
+    const totalPixels = width * height;
+
+    // Calculate 3% of total pixels for the number of dots
+    const dotCount = Math.floor(totalPixels * 0.03);
+
+    // Function to generate a random number between a range
+    function getRandom(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // Function to apply the pointillism effect
+    for (let i = 0; i < dotCount; i++) {
+      // Randomly select a pixel index
+      const randomPixelIndex = Math.floor(Math.random() * totalPixels);
+      const x = randomPixelIndex % width;
+      const y = Math.floor(randomPixelIndex / width);
+
+      // Get the color of the randomly selected pixel
+      const r = pixels[randomPixelIndex * 4];
+      const g = pixels[randomPixelIndex * 4 + 1];
+      const b = pixels[randomPixelIndex * 4 + 2];
+
+      // Random radius between 1% and 10% of the image dimensions
+      const radius = Math.floor(getRandom(0.01, 0.1) * Math.max(width, height));
+
+      // Apply the effect to all pixels within the circle
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          const newX = x + dx;
+          const newY = y + dy;
+
+          // Check if the new pixel is within the image bounds and inside the circle
+          if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance <= radius) {
+              const index = (newY * width + newX) * 4;
+              pixels[index] = r; // Red
+              pixels[index + 1] = g; // Green
+              pixels[index + 2] = b; // Blue
+              pixels[index + 3] = 255; // Alpha (fully opaque)
+            }
+          }
+        }
+      }
+    }
+
+    // Return the modified image data
+    return imageData;
+  }
+
+  setInterval(async() => {
     renderer.render();
 
     // Planet 1
     planet1Angle += planetSpeed;
     const px1 = planet1OrbitRadius * Math.cos(planet1Angle);
     const py1 = planet1OrbitRadius * Math.sin(planet1Angle);
+    planet1Pose.set(PGA2D.normaliozeMotor([1, 0, px1, py1]));
+
+    // Planet 1 rotation (rotating the planet around its center)
+    const planetRotationSpeed = 0.01;
+    let planet1RotationAngle = planet1Angle * planetRotationSpeed; // Adjust rotation speed as needed
+    const rotationMatrix = new Float32Array([
+      Math.cos(planet1RotationAngle), -Math.sin(planet1RotationAngle),
+      Math.sin(planet1RotationAngle), Math.cos(planet1RotationAngle),
+    ]);
+    for (let i = 0; i < planet1Vertices.length; i += 2) {
+      let x = planet1Vertices[i];
+      let y = planet1Vertices[i + 1];
+      planet1Vertices[i] = x * rotationMatrix[0] + y * rotationMatrix[1];
+      planet1Vertices[i + 1] = x * rotationMatrix[2] + y * rotationMatrix[3];
+    }
+    
     planet1Pose.set(PGA2D.normaliozeMotor([1, 0, px1, py1]));
 
     // Planet 2 (closer to Sun)
@@ -206,13 +342,29 @@ async function init() {
     const py3 = planet3OrbitRadius * Math.sin(planet3Angle);
     planet3Pose.set(PGA2D.normaliozeMotor([1, 0, px3, py3]));
 
-    // New Planets (farther from Sun)
-    for (let i = 0; i < 5; i++) {
-      newPlanetsAngles[i] += planetSpeed;
-      const px = planetRadii[i + 3] * Math.cos(newPlanetsAngles[i]); // Start from radius 0.4 and onwards
-      const py = planetRadii[i + 3] * Math.sin(newPlanetsAngles[i]);
-      newPlanets[i].pose.set(PGA2D.normaliozeMotor([1, 0, px, py]));
-    }
+    // New Planet Behind (elliptical orbit)
+    planetBehindAngle += planetSpeed;
+    const pxBehind = planetBehindOrbitRadiusX * Math.cos(planetBehindAngle);
+    const pyBehind = planetBehindOrbitRadiusY * Math.sin(planetBehindAngle);
+    planetBehindPose.set(PGA2D.normaliozeMotor([1, 0, pxBehind, pyBehind]));
+
+    // New Planet Behind 2 (even further behind, elliptical orbit)
+    planetBehind2Angle += planetSpeed;
+    const pxBehind2 = planetBehind2OrbitRadiusX * Math.cos(planetBehind2Angle);
+    const pyBehind2 = planetBehind2OrbitRadiusY * Math.sin(planetBehind2Angle);
+    planetBehind2Pose.set(PGA2D.normaliozeMotor([1, 0, pxBehind2, pyBehind2]));
+
+    // New Planet Behind 3 (circular orbit)
+    planetBehind3Angle += planetSpeed;
+    const pxBehind3 = planetBehind3OrbitRadius * Math.cos(planetBehind3Angle);
+    const pyBehind3 = planetBehind3OrbitRadius * Math.sin(planetBehind3Angle);
+    planetBehind3Pose.set(PGA2D.normaliozeMotor([1, 0, pxBehind3, pyBehind3]));
+
+    // New Planet Behind 4 (circular orbit)
+    planetBehind4Angle += planetSpeed;
+    const pxBehind4 = planetBehind4OrbitRadius * Math.cos(planetBehind4Angle);
+    const pyBehind4 = planetBehind4OrbitRadius * Math.sin(planetBehind4Angle);
+    planetBehind4Pose.set(PGA2D.normaliozeMotor([1, 0, pxBehind4, pyBehind4]));
 
     // Moon orbiting Planet 1
     moonAngle += moonSpeed;
@@ -234,11 +386,32 @@ async function init() {
       spaceshipTime = Math.max(0, Math.min(1, spaceshipTime));
     }
 
+    // Spaceship 2 keyframe interpolation
+    interpTime += interpSpeed;
+    if (interpTime >= 1) {
+      interpTime = 0;
+      currentKeyframe = (currentKeyframe + 1) % keyframes.length;
+    }
+    ship2Pose.set(lerpMotor(
+      keyframes[currentKeyframe],
+      keyframes[(currentKeyframe + 1) % keyframes.length],
+      interpTime
+    ));
+
+    // Get the image data from the canvas
+    const ctx = canvasTag.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvasTag.width, canvasTag.height);
+
+    // Apply the Pointillism effect to the image data
+    const pointillizedData = await applyPointillism(imageData);
+
+    // Put the modified image data back to the canvas
+    ctx.putImageData(pointillizedData, 0, 0);
+
   }, 100);
 
   return renderer;
 }
-
 
 init().then(ret => {
   console.log(ret);
