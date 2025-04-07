@@ -105,7 +105,38 @@ async function init() {
   );
   await renderer.appendSceneObject(moon);
 
-  // === SPACESHIP 1 === (Was: spaceship)
+  // --- New Planet 2 (closer to Sun) ---
+  const planet2Vertices = generateCircleVertices(0.03, 40, 0.5, 0.5, 1, 1);
+  let planet2Pose = new Float32Array([1, 0, 0.2, 0, 1, 1]);
+  const planet2 = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat, planet2Vertices, planet2Pose
+  );
+  await renderer.appendSceneObject(planet2);
+
+  // --- New Planet 3 (even closer to Sun) ---
+  const planet3Vertices = generateCircleVertices(0.03, 40, 0.8, 0.8, 1, 1);
+  let planet3Pose = new Float32Array([1, 0, 0.1, 0, 1, 1]);
+  const planet3 = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat, planet3Vertices, planet3Pose
+  );
+  await renderer.appendSceneObject(planet3);
+
+  // --- New Planets (farther from Sun) ---
+  const newPlanets = [];
+  const planetRadii = [0.4, 0.5, 0.6, 0.7, 0.8]; // Orbital radii for the 5 new planets
+
+  for (let i = 0; i < 5; i++) {
+    const radius = planetRadii[i];
+    const planetVertices = generateCircleVertices(0.03, 40, Math.random(), Math.random(), Math.random(), 1);
+    let planetPose = new Float32Array([1, 0, radius, 0, 1, 1]);
+    const planet = new Standard2DPGAPosedVertexColorObject(
+      renderer._device, renderer._canvasFormat, planetVertices, planetPose
+    );
+    newPlanets.push(planet);
+    await renderer.appendSceneObject(planet);
+  }
+
+  // === SPACESHIP 1 ===
   const spaceship1Pose = new Float32Array([1, 0, 0.5, 0, 1, 1]);
 
   const ship1Nose = new Standard2DPGAPosedVertexColorObject(
@@ -141,48 +172,15 @@ async function init() {
   let spaceshipDir = 1;
   const spaceshipSpeed = 0.01;
 
-  // === SPACESHIP 2 === (Was: interpolating planet2)
-  const ship2Pose = new Float32Array([1, 0, -0.3, 0.3, 1, 1]);
-
-  const ship2Nose = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat,
-    generateTriangleVertices(0.025, 1, 0.9, 0.2, 0.2, 1),
-    ship2Pose
-  );
-  const ship2Body = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat,
-    generateRectangleVertices(0.03, 0.07, 0.9, 0.4, 0.4, 1),
-    ship2Pose
-  );
-  const ship2Left = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat,
-    generateCircleVertices(0.01, 20, 1, 0.6, 0.6, 1),
-    ship2Pose
-  );
-  const ship2Right = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat,
-    generateCircleVertices(0.01, 20, 1, 0.6, 0.6, 1),
-    ship2Pose
-  );
-
-  await renderer.appendSceneObject(ship2Nose);
-  await renderer.appendSceneObject(ship2Body);
-  await renderer.appendSceneObject(ship2Left);
-  await renderer.appendSceneObject(ship2Right);
-
-  const keyframes = [
-    PGA2D.normaliozeMotor([1, 0, -0.4, 0.4]),
-    PGA2D.normaliozeMotor([1, 0, 0.0, -0.4]),
-    PGA2D.normaliozeMotor([1, 0, 0.4, 0.4]),
-  ];
-  let interpTime = 0;
-  let currentKeyframe = 0;
-  const interpSpeed = 0.01;
-
   // --- Animation Loop ---
-  let planetAngle = 0;
+  let planet1Angle = 0;
+  let planet2Angle = 0;
+  let planet3Angle = 0;
   let moonAngle = 0;
-  const planetOrbitRadius = 0.3;
+  let newPlanetsAngles = Array(5).fill(0); // For 5 new planets
+  const planet1OrbitRadius = 0.3;
+  const planet2OrbitRadius = 0.2; // New planet 2 closer to the Sun
+  const planet3OrbitRadius = 0.1; // New planet 3 closer to the Sun
   const moonOrbitRadius = 0.05;
   const planetSpeed = Math.PI / 100;
   const moonSpeed = Math.PI / 50;
@@ -190,15 +188,36 @@ async function init() {
   setInterval(() => {
     renderer.render();
 
-    // Planet + Moon
-    planetAngle += planetSpeed;
-    const px = planetOrbitRadius * Math.cos(planetAngle);
-    const py = planetOrbitRadius * Math.sin(planetAngle);
-    planet1Pose.set(PGA2D.normaliozeMotor([1, 0, px, py]));
+    // Planet 1
+    planet1Angle += planetSpeed;
+    const px1 = planet1OrbitRadius * Math.cos(planet1Angle);
+    const py1 = planet1OrbitRadius * Math.sin(planet1Angle);
+    planet1Pose.set(PGA2D.normaliozeMotor([1, 0, px1, py1]));
 
+    // Planet 2 (closer to Sun)
+    planet2Angle += planetSpeed;
+    const px2 = planet2OrbitRadius * Math.cos(planet2Angle);
+    const py2 = planet2OrbitRadius * Math.sin(planet2Angle);
+    planet2Pose.set(PGA2D.normaliozeMotor([1, 0, px2, py2]));
+
+    // Planet 3 (even closer to Sun)
+    planet3Angle += planetSpeed;
+    const px3 = planet3OrbitRadius * Math.cos(planet3Angle);
+    const py3 = planet3OrbitRadius * Math.sin(planet3Angle);
+    planet3Pose.set(PGA2D.normaliozeMotor([1, 0, px3, py3]));
+
+    // New Planets (farther from Sun)
+    for (let i = 0; i < 5; i++) {
+      newPlanetsAngles[i] += planetSpeed;
+      const px = planetRadii[i + 3] * Math.cos(newPlanetsAngles[i]); // Start from radius 0.4 and onwards
+      const py = planetRadii[i + 3] * Math.sin(newPlanetsAngles[i]);
+      newPlanets[i].pose.set(PGA2D.normaliozeMotor([1, 0, px, py]));
+    }
+
+    // Moon orbiting Planet 1
     moonAngle += moonSpeed;
-    const mx = px + moonOrbitRadius * Math.cos(moonAngle);
-    const my = py + moonOrbitRadius * Math.sin(moonAngle);
+    const mx = px1 + moonOrbitRadius * Math.cos(moonAngle);
+    const my = py1 + moonOrbitRadius * Math.sin(moonAngle);
     moonPose.set(PGA2D.normaliozeMotor([1, 0, mx, my]));
 
     // Spaceship 1 movement (linear + eased)
@@ -215,22 +234,11 @@ async function init() {
       spaceshipTime = Math.max(0, Math.min(1, spaceshipTime));
     }
 
-    // Spaceship 2 keyframe interpolation
-    interpTime += interpSpeed;
-    if (interpTime >= 1) {
-      interpTime = 0;
-      currentKeyframe = (currentKeyframe + 1) % keyframes.length;
-    }
-    ship2Pose.set(lerpMotor(
-      keyframes[currentKeyframe],
-      keyframes[(currentKeyframe + 1) % keyframes.length],
-      interpTime
-    ));
-
   }, 100);
 
   return renderer;
 }
+
 
 init().then(ret => {
   console.log(ret);
