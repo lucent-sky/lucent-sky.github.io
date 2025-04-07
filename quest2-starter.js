@@ -90,76 +90,20 @@ async function init() {
   );
   await renderer.appendSceneObject(sun);
 
-  // --- Mercury ---
-  const mercuryVertices = generateCircleVertices(0.015, 40, 0.6, 0.6, 0.6, 1);
-  let mercuryPose = new Float32Array([1, 0, 0.2, 0, 1, 1]);
-  const mercury = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat, mercuryVertices, mercuryPose
+  // --- Planet 1 + Moon ---
+  const planet1Vertices = generateCircleVertices(0.03, 40, 0.2, 0.4, 1, 1);
+  let planet1Pose = new Float32Array([1, 0, 0.3, 0, 1, 1]);
+  const planet1 = new Standard2DPGAPosedVertexColorObject(
+    renderer._device, renderer._canvasFormat, planet1Vertices, planet1Pose
   );
-  await renderer.appendSceneObject(mercury);
-
-  // --- Venus ---
-  const venusVertices = generateCircleVertices(0.025, 40, 1, 0.8, 0.4, 1);
-  let venusPose = new Float32Array([1, 0, 0.4, 0, 1, 1]);
-  const venus = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat, venusVertices, venusPose
-  );
-  await renderer.appendSceneObject(venus);
-
-  // --- Earth + Moon ---
-  const earthVertices = generateCircleVertices(0.03, 40, 0.2, 0.4, 1, 1);
-  let earthPose = new Float32Array([1, 0, 0.6, 0, 1, 1]);
-  const earth = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat, earthVertices, earthPose
-  );
-  await renderer.appendSceneObject(earth);
+  await renderer.appendSceneObject(planet1);
 
   const moonVertices = generateCircleVertices(0.015, 40, 0.9, 0.9, 0.9, 1);
-  let moonPose = new Float32Array([1, 0, 0.65, 0, 1, 1]);
+  let moonPose = new Float32Array([1, 0, 0.35, 0, 1, 1]);
   const moon = new Standard2DPGAPosedVertexColorObject(
     renderer._device, renderer._canvasFormat, moonVertices, moonPose
   );
   await renderer.appendSceneObject(moon);
-
-  // --- Mars ---
-  const marsVertices = generateCircleVertices(0.025, 40, 0.8, 0.2, 0.2, 1);
-  let marsPose = new Float32Array([1, 0, 0.8, 0, 1, 1]);
-  const mars = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat, marsVertices, marsPose
-  );
-  await renderer.appendSceneObject(mars);
-
-  // --- Jupiter ---
-  const jupiterVertices = generateCircleVertices(0.05, 40, 0.8, 0.5, 0.2, 1);
-  let jupiterPose = new Float32Array([1, 0, 1.2, 0, 1, 1]);
-  const jupiter = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat, jupiterVertices, jupiterPose
-  );
-  await renderer.appendSceneObject(jupiter);
-
-  // --- Saturn ---
-  const saturnVertices = generateCircleVertices(0.045, 40, 1, 0.8, 0.2, 1);
-  let saturnPose = new Float32Array([1, 0, 1.6, 0, 1, 1]);
-  const saturn = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat, saturnVertices, saturnPose
-  );
-  await renderer.appendSceneObject(saturn);
-
-  // --- Uranus ---
-  const uranusVertices = generateCircleVertices(0.035, 40, 0.4, 0.8, 1, 1);
-  let uranusPose = new Float32Array([1, 0, 2.0, 0, 1, 1]);
-  const uranus = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat, uranusVertices, uranusPose
-  );
-  await renderer.appendSceneObject(uranus);
-
-  // --- Neptune ---
-  const neptuneVertices = generateCircleVertices(0.035, 40, 0.2, 0.6, 1, 1);
-  let neptunePose = new Float32Array([1, 0, 2.4, 0, 1, 1]);
-  const neptune = new Standard2DPGAPosedVertexColorObject(
-    renderer._device, renderer._canvasFormat, neptuneVertices, neptunePose
-  );
-  await renderer.appendSceneObject(neptune);
 
   // === SPACESHIP 1 === (Was: spaceship)
   const spaceship1Pose = new Float32Array([1, 0, 0.5, 0, 1, 1]);
@@ -236,67 +180,26 @@ async function init() {
   const interpSpeed = 0.01;
 
   // --- Animation Loop ---
-  let planetAngles = {
-    mercury: 0,
-    venus: 0,
-    earth: 0,
-    mars: 0,
-    jupiter: 0,
-    saturn: 0,
-    uranus: 0,
-    neptune: 0,
-  };
-
-  const planetOrbitRadii = {
-    mercury: 0.2,
-    venus: 0.4,
-    earth: 0.6,
-    mars: 0.8,
-    jupiter: 1.2,
-    saturn: 1.6,
-    uranus: 2.0,
-    neptune: 2.4,
-  };
-
-  const planetSpeeds = {
-    mercury: Math.PI / 500,
-    venus: Math.PI / 400,
-    earth: Math.PI / 100,
-    mars: Math.PI / 150,
-    jupiter: Math.PI / 60,
-    saturn: Math.PI / 40,
-    uranus: Math.PI / 30,
-    neptune: Math.PI / 20,
-  };
-
+  let planetAngle = 0;
   let moonAngle = 0;
+  const planetOrbitRadius = 0.3;
   const moonOrbitRadius = 0.05;
+  const planetSpeed = Math.PI / 100;
   const moonSpeed = Math.PI / 50;
 
   setInterval(() => {
     renderer.render();
 
-    // Update planet positions
-    for (let planet in planetAngles) {
-      planetAngles[planet] += planetSpeeds[planet];
-      const px = planetOrbitRadii[planet] * Math.cos(planetAngles[planet]);
-      const py = planetOrbitRadii[planet] * Math.sin(planetAngles[planet]);
+    // Planet + Moon
+    planetAngle += planetSpeed;
+    const px = planetOrbitRadius * Math.cos(planetAngle);
+    const py = planetOrbitRadius * Math.sin(planetAngle);
+    planet1Pose.set(PGA2D.normaliozeMotor([1, 0, px, py]));
 
-      // Update each planet's position
-      if (planet === 'earth') {
-        // Earth and moon
-        window[planet + 'Pose'].set(PGA2D.normaliozeMotor([1, 0, px, py]));
-
-        // Move moon
-        moonAngle += moonSpeed;
-        const mx = px + moonOrbitRadius * Math.cos(moonAngle);
-        const my = py + moonOrbitRadius * Math.sin(moonAngle);
-        moonPose.set(PGA2D.normaliozeMotor([1, 0, mx, my]));
-      } else {
-        // Other planets
-        window[planet + 'Pose'].set(PGA2D.normaliozeMotor([1, 0, px, py]));
-      }
-    }
+    moonAngle += moonSpeed;
+    const mx = px + moonOrbitRadius * Math.cos(moonAngle);
+    const my = py + moonOrbitRadius * Math.sin(moonAngle);
+    moonPose.set(PGA2D.normaliozeMotor([1, 0, mx, my]));
 
     // Spaceship 1 movement (linear + eased)
     let t = spaceshipTime;
