@@ -33,41 +33,6 @@ import LineStrip2DVertexObject from '/lib/DSViz/LineStrip2DVertexObject.js'
 import DemoTreeObject from '/lib/DSViz/DemoTreeObject.js'
 import PGA2D from '/lib/Math/PGA2D.js'
 
-/*!
- * Copyright (c) 2025 SingChun LEE @ Bucknell University. CC BY-NC 4.0.
- * 
- * This code is provided mainly for educational purposes at Bucknell University.
- *
- * This code is licensed under the Creative Commons Attribution-NonCommerical 4.0
- * International License. To view a copy of the license, visit 
- *   https://creativecommons.org/licenses/by-nc/4.0/
- * or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
- *
- * You are free to:
- *  - Share: copy and redistribute the material in any medium or format.
- *  - Adapt: remix, transform, and build upon the material.
- *
- * Under the following terms:
- *  - Attribution: You must give appropriate credit, provide a link to the license,
- *                 and indicate if changes where made.
- *  - NonCommerical: You may not use the material for commerical purposes.
- *  - No additional restrictions: You may not apply legal terms or technological 
- *                                measures that legally restrict others from doing
- *                                anything the license permits.
- */
-
-// Check your browser supports: https://github.com/gpuweb/gpuweb/wiki/Implementation-Status#implementation-status
-// Need to enable experimental flags chrome://flags/
-// Chrome & Edge 113+ : Enable Vulkan, Default ANGLE Vulkan, Vulkan from ANGLE, Unsafe WebGPU Support, and WebGPU Developer Features (if exsits)
-// Firefox Nightly: sudo snap install firefox --channel=latext/edge or download from https://www.mozilla.org/en-US/firefox/channel/desktop/
-
-import FilteredRenderer from '/lib/Viz/2DFilteredRenderer.js'
-import Standard2DFullScreenObject from '/lib/DSViz/Standard2DFullScreenObject.js'
-import Standard2DPGAPosedVertexColorObject from '/lib/DSViz/Standard2DPGAPosedVertexColorObject.js'
-import LineStrip2DVertexObject from '/lib/DSViz/LineStrip2DVertexObject.js'
-import DemoTreeObject from '/lib/DSViz/DemoTreeObject.js'
-import PGA2D from '/lib/Math/PGA2D.js'
-
 // Shape generators
 function generateCircleVertices(radius, segments, r, g, b, a) {
   const vertices = [0, 0, r, g, b, a];
