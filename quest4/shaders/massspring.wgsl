@@ -25,21 +25,20 @@ struct Particle {
   p: vec2f,   // the particle position
   v: vec2f,   // the particle velocity
   dv: vec2f,  // the velocity update
-  m: f32,     // the partilce pass
+  m: f32,     // the particle mass
   dummy: f32, // a dummy value for memory alignment
 }
 
 struct Spring {
-  pts: vec2f, // the indices of two connected partilces
+  pts: vec2f, // the indices of two connected particles
   l: f32,     // the original spring length
   s: f32      // the stiffness coefficient
 }
 
-// TODO 4: bind the storage buffer variables
-
-
-
-
+// Bind the storage buffer variables (TODO 4)
+@group(0) @binding(0) var<storage, read> particlesIn: array<Particle>;
+@group(0) @binding(1) var<storage, read_write> particlesOut: array<Particle>;
+@group(0) @binding(2) var<storage, read> springsIn: array<Spring>;
 
 @vertex
 fn vertexMain(@builtin(instance_index) idx: u32, @builtin(vertex_index) vIdx: u32) -> @builtin(position) vec4f {
@@ -55,56 +54,59 @@ fn vertexMain(@builtin(instance_index) idx: u32, @builtin(vertex_index) vIdx: u3
 
 @fragment
 fn fragmentMain() -> @location(0) vec4f {
-  return vec4f(238.f/255, 118.f/255, 35.f/255, 1); // (R, G, B, A)
+  return vec4f(238.0 / 255.0, 118.0 / 255.0, 35.0 / 255.0, 1.0); // (R, G, B, A)
 }
 
 @vertex
 fn vertexSpringMain(@builtin(instance_index) idx: u32, @builtin(vertex_index) vIdx: u32) -> @builtin(position) vec4f {
-  //draw lines to present a spring - here is an ugly hack using an offset, which does not visualize nicely...
-  // for better apperance, use texture mapping, by now, you should know how to use vertex_index/instance_index to draw the shapes you like in the vertex shader
-  return vec4f(particlesIn[u32(springsIn[idx].pts[vIdx % 2])].p + 0.001 * f32(vIdx / 2), 0, 1);
+  // Draw lines to represent a spring
+  return vec4f(particlesIn[u32(springsIn[idx].pts[vIdx % 2])].p, 0, 1);
 }
 
 @fragment
 fn fragmentSpringMain() -> @location(0) vec4f {
-  return vec4f(255.f/255, 163.f/255, 0.f/255, 1); // (R, G, B, A)
+  return vec4f(255.0 / 255.0, 163.0 / 255.0, 0.0 / 255.0, 1.0); // (R, G, B, A)
 }
 
 @compute @workgroup_size(256)
 fn computeMain(@builtin(global_invocation_id) global_id: vec3u) {
   let idx = global_id.x;
-  
   if (idx < arrayLength(&springsIn)) {
-    // Get the spring using the invocation id
     var spring = springsIn[idx];
-    let aIdx = u32(spring.pts[0]); // particle a
-    let bIdx = u32(spring.pts[1]); // particle b
-    
-    let ptA = particlesIn[aIdx].p; // position a
-    let ptB = particlesIn[bIdx].p; // position b
-    let massA = particlesIn[aIdx].m; // mass a
-    let massB = particlesIn[bIdx].m; // mass b
-    
-    // TODO 5a: compute the spring force using Hooke's Law
+    let aIdx = u32(spring.pts[0]);
+    let bIdx = u32(spring.pts[1]);
+    let ptA = particlesIn[aIdx].p;
+    let ptB = particlesIn[bIdx].p;
+    let massA = particlesIn[aIdx].m;
+    let massB = particlesIn[bIdx].m;
+
+    // Hooke's Law (TODO 5a)
     let diff = ptB - ptA;
     let dist = length(diff);
     let force = spring.s * (dist - spring.l);
-    
-    // TODO 5b: compute the delta velocity using Netwon's law of motion
-    
-    
+
+    // Newton's Second Law (TODO 5b)
+    if (dist > 0.0001) {
+      let dir = normalize(diff);
+      particlesOut[aIdx].dv += (force * dir) / (massA * 1000.0);
+      particlesOut[bIdx].dv -= (force * dir) / (massB * 1000.0);
+    }
   }
 }
 
 @compute @workgroup_size(256)
 fn updateMain(@builtin(global_invocation_id) global_id: vec3u) {
   let idx = global_id.x;
-  
   if (idx < arrayLength(&particlesIn)) {
     var particle = particlesIn[idx];
-    particlesOut[idx].p = particle.p + particle.v + particlesOut[idx].dv; // update the posistion
-    particlesOut[idx].v = (particle.v + particlesOut[idx].dv) * 0.95;     // damping
-    particlesOut[idx].dv = vec2f(0, 0);                                   // reset delta velocity to zeros
-    particlesOut[idx].m = particle.m;                                     // copy the mass over
+    // Only update if the particle is not pinned down
+    if (particle.dummy != 1) {
+      particlesOut[idx].p = particle.p + particle.v + particlesOut[idx].dv;
+      particlesOut[idx].v = (particle.v + particlesOut[idx].dv) * 0.95; // Damping
+      particlesOut[idx].dv = vec2f(0.0, 0.0); // Reset delta velocity
+    }
+    // Always copy the mass to preserve it
+    particlesOut[idx].m = particle.m;
+    particlesOut[idx].dummy = particle.dummy;
   }
 }
